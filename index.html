@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vận Tải Mạnh Việt - Dịch Vụ Xe Du Lịch</title>
+    <link rel="icon" href="./logo.jpg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .hero-bg {
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-[Inter]">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-white z-[60] flex flex-col justify-center items-center">
+        <div class="spinner mb-4"></div>
+        <p class="text-indigo-600 font-semibold animate-pulse">Đang tải hệ thống...</p>
+    </div>
+
+    <!-- 1. LANDING PAGE -->
+    <div id="landing-page" class="hidden">
+        <nav class="bg-white shadow-md fixed w-full z-10 top-0">
+            <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <img src="./logo.jpg" class="h-12 w-auto object-contain" alt="Logo">
+                    <span class="text-xl font-bold text-gray-800">Mạnh Việt Transport</span>
+                </div>
+                <div class="space-x-4">
+                    <button class="text-gray-600 hover:text-indigo-600 font-medium btn-open-login">Đăng Nhập</button>
+                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 btn-open-signup">Đăng Ký</button>
+                </div>
+            </div>
+        </nav>
+        <div class="hero-bg h-screen flex items-center justify-center text-center px-4">
+            <div class="text-white max-w-3xl">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6">Hệ Thống Quản Lý Vận Tải</h1>
+                <p class="text-xl mb-8 text-gray-200">Giải pháp chuyên nghiệp cho Chủ xe, Tài xế và Đối tác kinh doanh.</p>
+                <button class="bg-green-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-green-700 transition shadow-lg btn-open-signup">Tham Gia Ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. AUTH MODAL -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative mx-4">
+            <button id="btn-close-auth" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            <div id="login-form-container">
+                <h2 class="text-2xl font-bold mb-6 text-center text-indigo-700">Đăng Nhập</h2>
+                <form id="form-login" class="space-y-4">
+                    <input type="email" id="login-email" placeholder="Email" class="form-input" required>
+                    <input type="password" id="login-pass" placeholder="Mật khẩu" class="form-input" required>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Đăng Nhập</button>
+                </form>
+                <p class="text-center mt-4 text-sm">Chưa có tài khoản? <a href="#" id="link-to-signup" class="text-indigo-600 font-bold hover:underline">Đăng ký ngay</a></p>
+            </div>
+            <div id="signup-form-container" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center text-green-600">Đăng Ký Đối Tác</h2>
+                <form id="form-signup" class="space-y-3">
+                    <input type="text" id="reg-name" placeholder="Họ và Tên" class="form-input" required>
+                    <input type="tel" id="reg-phone" placeholder="Số điện thoại" class="form-input" required>
+                    <input type="email" id="reg-email" placeholder="Email" class="form-input" required>
+                    <input type="password" id="reg-pass" placeholder="Mật khẩu" class="form-input" required>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Vai trò</label>
+                        <select id="reg-role" class="form-input bg-gray-50">
+                            <option value="partner">Cộng tác viên (Giới thiệu/Gửi khách)</option>
+                            <option value="driver">Tài xế (Lái xe)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Tạo Tài Khoản</button>
+                </form>
+                <p class="text-center mt-4 text-sm">Đã có tài khoản? <a href="#" id="link-to-login" class="text-green-600 font-bold hover:underline">Đăng nhập</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. DASHBOARD APP -->
+    <div id="dashboard-app" class="hidden min-h-screen flex flex-col">
+        <header class="bg-white shadow-sm border-b sticky top-0 z-20">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <img src="./logo.jpg" class="h-8 w-auto object-contain">
+                    <h1 class="font-bold text-gray-800 hidden sm:block">Quản Trị Mạnh Việt</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="user-info-display"></div>
+                    <button id="btn-logout" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded text-sm">Đăng xuất</button>
+                </div>
+            </div>
+            <div class="bg-white border-b overflow-x-auto">
+                <nav class="container mx-auto px-4 flex space-x-2 py-2 min-w-max">
+                    <button id="nav-add-trip" data-page="add-trip-page" class="nav-btn active">Thêm Chuyến</button>
+                    <button id="nav-list-trip" data-page="trips-list-page" class="nav-btn">Danh Sách</button>
+                    <button id="nav-report" data-page="report-page" class="nav-btn">Báo Cáo</button>
+                    <button id="nav-debt" data-page="customer-debt-page" class="nav-btn">Công Nợ</button>
+                    <button id="nav-users" data-page="user-management-page" class="nav-btn hidden text-indigo-700 font-bold bg-indigo-50">👥 Nhân Sự</button>
+                    <button id="nav-config" data-page="management-page" class="nav-btn">Cấu Hình</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="flex-grow bg-gray-50 p-4 md:p-6">
+            <div class="container mx-auto max-w-7xl">
+                
+                <!-- PAGE: THÊM CHUYẾN ĐI -->
+                <div id="add-trip-page" class="page-view">
+                    <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow-sm border">
+                        <h2 class="text-xl font-bold mb-5 flex items-center gap-2 text-indigo-700">
+                            <span class="bg-indigo-100 p-2 rounded-lg">📝</span> <span id="add-trip-title">Tạo Chuyến Đi Mới</span>
+                        </h2>
+                        <form id="trip-form" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium mb-1">Ngày Đi</label><input type="date" id="trip-start-date" class="form-input" required></div>
+                                <div><label class="block text-sm font-medium mb-1">Ngày Về</label><input type="date" id="trip-end-date" class="form-input" required></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border">
+                                <div><label class="block text-sm font-medium mb-1">Xe</label><select id="car-select" class="form-input"></select></div>
+                                <div id="driver-field"><label class="block text-sm font-medium mb-1">Tài Xế</label><select id="driver-select" class="form-input"></select></div>
+                                <div id="customer-field"><label class="block text-sm font-medium mb-1">Khách Hàng</label><select id="customer-select" class="form-input"></select></div>
+                            </div>
+                            
+                            <!-- KHU VỰC CHUẨN (ADMIN/DRIVER) -->
+                            <div id="standard-trip-fields">
+                                <div class="grid grid-cols-2 gap-4 mt-4">
+                                    <div><label class="block text-sm font-medium mb-1">Điểm Đón</label><input type="text" id="pickup-location" class="form-input"></div>
+                                    <div><label class="block text-sm font-medium mb-1">Điểm Trả</label><input type="text" id="dropoff-location" class="form-input"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mt-4">
+                                    <div><label class="block text-sm font-medium mb-1">KM Đi</label><input type="number" id="start-km" class="form-input" placeholder="0"></div>
+                                    <div><label class="block text-sm font-medium mb-1">KM Về</label><input type="number" id="end-km" class="form-input" placeholder="0"></div>
+                                </div>
+                            </div>
+
+                            <!-- KHU VỰC CỘNG TÁC VIÊN -->
+                            <div id="partner-trip-fields" class="hidden mt-4">
+                                <label class="block text-sm font-medium mb-1">Nội dung chuyến đi (Đi đâu, đón ở đâu...)</label>
+                                <textarea id="trip-content" class="form-input h-24" placeholder="VD: Đón khách tại 123 Lê Lợi đi Sân Bay, 4 người, nhiều hành lý..."></textarea>
+                            </div>
+                            
+                            <!-- KHU VỰC TÀI CHÍNH (ADMIN/DRIVER) -->
+                            <div id="finance-trip-fields" class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-yellow-50 p-4 rounded-lg border border-yellow-100 mt-4">
+                                <div><label class="block text-sm font-medium mb-1 text-red-700">Chi tiền xăng</label><input type="number" id="fuel-cost" value="0" class="form-input border-red-200 focus:border-red-500"></div>
+                                <div><label class="block text-sm font-medium mb-1 text-orange-700">Chi vé/cầu đường</label><input type="number" id="ticket-cost" value="0" class="form-input border-orange-200 focus:border-orange-500"></div>
+                                <div><label class="block text-sm font-medium mb-1 text-green-700">Doanh thu (VND)</label><input type="number" id="trip-fare" value="0" class="form-input border-green-200 focus:border-green-500"></div>
+                            </div>
+                            
+                            <div class="flex items-center mt-4" id="paid-checkbox-div">
+                                <input id="is-paid" type="checkbox" class="h-5 w-5 text-indigo-600 rounded">
+                                <label for="is-paid" class="ml-2 text-sm font-medium">Khách đã thanh toán ngay?</label>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow mt-4">Lưu Chuyến Đi</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- PAGE: DANH SÁCH -->
+                <div id="trips-list-page" class="page-view hidden">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                        <!-- Filter Bar -->
+                        <div class="flex flex-wrap gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tháng</label>
+                                <input type="month" id="list-filter-month" class="form-input py-1 px-2 text-sm h-9">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Lọc Theo Xe</label>
+                                <select id="list-filter-car" class="form-input py-1 px-2 text-sm h-9 min-w-[150px]">
+                                    <option value="">-- Tất cả xe --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Lọc Theo CTV</label>
+                                <select id="list-filter-partner" class="form-input py-1 px-2 text-sm h-9 min-w-[150px]">
+                                    <option value="">-- Tất cả CTV --</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button id="btn-reset-filter" class="bg-gray-200 hover:bg-gray-300 text-gray-600 px-3 py-1 rounded h-9 text-sm font-medium">Xóa lọc</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full custom-table">
+                                <thead><tr><th>Thời Gian</th><th>Chi Tiết</th><th>Trạng Thái</th><th>#</th></tr></thead>
+                                <tbody id="trips-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE: BÁO CÁO (THÊM BÁO CÁO KHÁCH HÀNG) -->
+                <div id="report-page" class="page-view hidden">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                        <div class="flex gap-4 mb-6 items-end">
+                            <div class="flex-grow md:flex-grow-0"><label class="block text-xs font-bold uppercase mb-1">Tháng</label><input type="month" id="report-month" class="form-input"></div>
+                            <button id="generate-report-btn" class="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700">Xem Báo Cáo</button>
+                        </div>
+                        <div id="report-results" class="hidden space-y-6">
+                            <div id="summary-report-content"></div>
+                            <div class="border-t pt-6">
+                                <h3 class="text-lg font-bold mb-4">Chi Tiết</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                                    <div>
+                                        <label class="block text-xs font-bold mb-1">Theo Xe</label>
+                                        <select id="report-car-select" class="form-input mb-2"></select>
+                                        <div id="car-detail-report"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold mb-1">Theo Tài Xế (Lương)</label>
+                                        <select id="report-driver-select" class="form-input mb-2"></select>
+                                        <div id="driver-detail-report"></div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold mb-1">Theo Cộng Tác Viên</label>
+                                        <select id="report-partner-select" class="form-input mb-2"></select>
+                                        <div id="partner-detail-report"></div>
+                                    </div>
+                                    <!-- THÊM Ô NÀY -->
+                                    <div>
+                                        <label class="block text-xs font-bold mb-1">Theo Khách Hàng</label>
+                                        <select id="report-customer-select" class="form-input mb-2"></select>
+                                        <div id="customer-detail-report"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE: CÔNG NỢ -->
+                <div id="customer-debt-page" class="page-view hidden">
+                     <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Xem công nợ của</label>
+                                <select id="debt-type-select" class="form-input bg-gray-50">
+                                    <option value="customer">Khách Hàng (Phải thu)</option>
+                                    <option value="partner">Cộng Tác Viên (Đối soát)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Chọn người cụ thể</label>
+                                <select id="debt-person-select" class="form-input"><option value="all">-- Tất cả --</option></select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tháng</label>
+                                <input type="month" id="debt-month-filter" class="form-input">
+                            </div>
+                        </div>
+                        <hr class="mb-6 border-gray-200">
+                        <div id="debt-list" class="space-y-4"></div>
+                     </div>
+                </div>
+
+                <!-- PAGE: NHÂN SỰ -->
+                <div id="user-management-page" class="page-view hidden">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-gray-800">Danh Sách Người Dùng</h2>
+                            <button id="btn-add-user" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm">+ Thêm Nhân Sự</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full custom-table">
+                                <thead><tr><th>Họ Tên</th><th>Email</th><th>Vai Trò</th><th>Hành Động</th></tr></thead>
+                                <tbody id="users-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE: CẤU HÌNH -->
+                <div id="management-page" class="page-view hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border">
+                            <h3 class="font-bold mb-3 text-blue-600">Quản Lý Xe</h3>
+                            <form id="add-car-form" class="flex gap-2 my-2"><input class="form-input text-sm" placeholder="Tên xe..." required><button class="bg-blue-600 text-white px-3 rounded">+</button></form>
+                            <div id="car-list" class="max-h-60 overflow-y-auto space-y-1 mt-2"></div>
+                        </div>
+                        <div id="config-driver-section" class="bg-white p-4 rounded-xl shadow-sm border">
+                            <h3 class="font-bold mb-3 text-green-600">Quản Lý Tài Xế</h3>
+                            <form id="add-driver-form" class="flex gap-2 my-2"><input class="form-input text-sm" placeholder="Tên tài xế..." required><button class="bg-green-600 text-white px-3 rounded">+</button></form>
+                            <div id="driver-list" class="max-h-60 overflow-y-auto space-y-1 mt-2"></div>
+                        </div>
+                        <div id="config-customer-section" class="bg-white p-4 rounded-xl shadow-sm border">
+                            <h3 class="font-bold mb-3 text-purple-600">Quản Lý Khách</h3>
+                            <form id="add-customer-form" class="flex gap-2 my-2"><input class="form-input text-sm" placeholder="Tên khách..." required><button class="bg-purple-600 text-white px-3 rounded">+</button></form>
+                            <div id="customer-list" class="max-h-60 overflow-y-auto space-y-1 mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div id="trip-detail-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl max-w-lg w-full">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold">Chi Tiết</h3>
+                <button id="close-modal-btn" class="text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div id="modal-content" class="space-y-3 text-sm"></div>
+        </div>
+    </div>
+
+    <div id="user-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl max-w-md w-full shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-gray-800" id="user-modal-title">Thêm Nhân Sự</h3>
+                <button id="close-user-modal" class="text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <form id="user-form" class="space-y-3">
+                <input type="hidden" id="user-id-edit">
+                <div><label class="block text-sm font-medium mb-1">Họ Tên</label><input type="text" id="u-name" class="form-input" required></div>
+                <div><label class="block text-sm font-medium mb-1">Số Điện Thoại</label><input type="tel" id="u-phone" class="form-input" required></div>
+                <div id="u-email-group"><label class="block text-sm font-medium mb-1">Email</label><input type="email" id="u-email" class="form-input"></div>
+                <div id="u-pass-group"><label class="block text-sm font-medium mb-1">Mật khẩu</label><input type="password" id="u-password" class="form-input"></div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Vai Trò</label>
+                    <select id="u-role" class="form-input bg-gray-50">
+                        <option value="driver">Tài xế</option>
+                        <option value="partner">Cộng tác viên</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 mt-4" id="btn-save-user">Lưu</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="update-fare-modal" class="modal fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl max-w-sm w-full shadow-2xl border-2 border-green-500">
+            <h3 class="text-lg font-bold mb-4 text-green-700 text-center">Cập Nhật Doanh Thu</h3>
+            <input type="hidden" id="update-fare-trip-id">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Số tiền (VND)</label>
+                <input type="number" id="update-fare-input" class="form-input text-lg font-bold text-right" placeholder="0">
+            </div>
+            <button id="btn-save-fare" class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700">Lưu Doanh Thu</button>
+            <button onclick="document.getElementById('update-fare-modal').classList.add('hidden')" class="w-full mt-2 text-gray-500 text-sm hover:underline">Hủy bỏ</button>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
