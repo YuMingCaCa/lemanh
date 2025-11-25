@@ -94,13 +94,18 @@ function setupDashboard(profile) {
     else if (role === 'partner') {
         ['nav-report', 'nav-users', 'nav-debt'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
         document.getElementById('config-driver-section').classList.add('hidden');
-        
-        document.getElementById('standard-trip-fields').classList.add('hidden');
-        document.getElementById('partner-trip-fields').classList.remove('hidden');
-        document.getElementById('finance-trip-fields').classList.add('hidden');
+
+        // Ẩn/hiện các trường cho CTV
+        document.getElementById('standard-trip-fields').classList.remove('hidden'); // Hiện các trường cơ bản (Ngày, Giờ, KM)
+        document.getElementById('partner-trip-fields').classList.remove('hidden'); // Hiện ô "Nội dung"
+        document.getElementById('pickup-location').parentElement.classList.add('hidden'); // Ẩn "Điểm đón"
+        document.getElementById('dropoff-location').parentElement.classList.add('hidden'); // Ẩn "Điểm trả"
+        document.getElementById('fuel-cost').parentElement.classList.add('hidden'); // Ẩn "Tiền xăng"
+        document.getElementById('trip-fare').parentElement.classList.add('hidden'); // Ẩn "Doanh thu"
+
         document.getElementById('paid-checkbox-div').classList.add('hidden');
         document.getElementById('driver-field').classList.add('hidden');
-        document.getElementById('customer-field').classList.remove('hidden');
+        
     }
 
     setupRealtimeListeners(role, profile.uid);
@@ -272,7 +277,8 @@ function setupAppEventListeners(role, uid) {
         try {
             const getTxt = (id) => { const sel = document.getElementById(id); return sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : ''; };
             const trip = {
-                startDate: document.getElementById('trip-start-date').value, endDate: document.getElementById('trip-end-date').value,
+                startDate: document.getElementById('trip-start-date').value + 'T' + document.getElementById('trip-start-time').value,
+                endDate: document.getElementById('trip-end-date').value + 'T' + document.getElementById('trip-end-time').value,
                 carId: document.getElementById('car-select').value, carName: getTxt('car-select'),
                 createdAt: new Date().toISOString(), createdBy: uid, creatorRole: role
             };
@@ -280,13 +286,14 @@ function setupAppEventListeners(role, uid) {
                 trip.tripContent = document.getElementById('trip-content').value;
                 trip.referrerId = uid; trip.referrerName = state.userProfile.name;
                 trip.customerId = document.getElementById('customer-select').value; trip.customerName = getTxt('customer-select');
-                trip.tripFare = 0; trip.fuelCost = 0; trip.ticketCost = 0; trip.isPaid = false;
-                trip.driverName = ''; 
+                trip.startKm = Number(document.getElementById('start-km').value);
+                trip.endKm = Number(document.getElementById('end-km').value);
+                trip.ticketCost = Number(document.getElementById('ticket-cost').value);
             } else {
                 trip.driverId = document.getElementById('driver-select').value; trip.driverName = getTxt('driver-select');
                 trip.customerId = document.getElementById('customer-select').value; trip.customerName = getTxt('customer-select');
-                trip.startKm = Number(document.getElementById('start-km').value); trip.endKm = Number(document.getElementById('end-km').value);
                 trip.pickupLocation = document.getElementById('pickup-location').value; trip.dropoffLocation = document.getElementById('dropoff-location').value;
+                trip.startKm = Number(document.getElementById('start-km').value); trip.endKm = Number(document.getElementById('end-km').value);
                 trip.fuelCost = Number(document.getElementById('fuel-cost').value);
                 trip.ticketCost = Number(document.getElementById('ticket-cost').value);
                 trip.tripFare = Number(document.getElementById('trip-fare').value);
@@ -392,7 +399,17 @@ function setupAppEventListeners(role, uid) {
 
 // --- HELPERS ---
 async function handleAddUser(name, email, password, phone, role) { try { const tempApp = initializeApp(auth.app.options, "Secondary"); const tempAuth = getAuth(tempApp); const cred = await createUserWithEmailAndPassword(tempAuth, email, password); await setDoc(doc(db, "apps", APP_ID, "users", cred.user.uid), { email, name, role, phone, createdAt: new Date().toISOString() }); await signOut(tempAuth); return true; } catch (error) { alert("Lỗi thêm user: " + error.message); return false; } }
-function setDefaultDate() { const today = new Date().toISOString().split('T')[0]; const d1 = document.getElementById('trip-start-date'); const d2 = document.getElementById('trip-end-date'); if(d1 && d2) { d1.value = today; d2.value = today; } }
+function setDefaultDate() {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().slice(0, 5);
+    const d1 = document.getElementById('trip-start-date');
+    const d2 = document.getElementById('trip-end-date');
+    const t1 = document.getElementById('trip-start-time');
+    const t2 = document.getElementById('trip-end-time');
+    if (d1 && d2) { d1.value = today; d2.value = today; }
+    if (t1 && t2) { t1.value = currentTime; t2.value = currentTime; }
+}
 function renderConfigList(elementId, data, colName) { const el = document.getElementById(elementId); if(!el) return; const myRole = state.userProfile.role; const myUid = state.userProfile.uid; el.innerHTML = data.map(item => { let showDel = false; if (myRole === 'admin') showDel = true; if (myRole === 'partner' && item.createdBy === myUid) showDel = true; return `<div class="flex justify-between p-2 bg-gray-50 border rounded items-center"><span>${item.name}</span>${showDel ? `<button class="text-red-500 font-bold px-2 btn-delete" data-col="${colName}" data-id="${item.id}">×</button>` : ''}</div>` }).join(''); }
 function populateSelects() {
     const fill = (id, data, label) => { const el = document.getElementById(id); if(el) { const cur = el.value; el.innerHTML = `<option value="">-- ${label} --</option>` + data.map(i => `<option value="${i.id}">${i.name}</option>`).join(''); if(cur) el.value = cur; } };

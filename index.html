@@ -115,9 +115,12 @@
                             <span class="bg-indigo-100 p-2 rounded-lg">📝</span> <span id="add-trip-title">Tạo Chuyến Đi Mới</span>
                         </h2>
                         <form id="trip-form" class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-medium mb-1">Ngày Đi</label><input type="date" id="trip-start-date" class="form-input" required></div>
-                                <div><label class="block text-sm font-medium mb-1">Ngày Về</label><input type="date" id="trip-end-date" class="form-input" required></div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">Ngày Đi</label><input type="date" id="trip-start-date" class="form-input" required></div>
+                                <div><label class="block text-sm font-medium mb-1">Giờ Đi</label><input type="time" id="trip-start-time" class="form-input" required></div>
+                                <div></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium mb-1">Ngày Về</label><input type="date" id="trip-end-date" class="form-input" required></div>
+                                <div><label class="block text-sm font-medium mb-1">Giờ Về</label><input type="time" id="trip-end-time" class="form-input" required></div>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-3 rounded-lg border">
