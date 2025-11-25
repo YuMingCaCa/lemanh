@@ -8,6 +8,9 @@ const state = { cars: [], drivers: [], customers: [], trips: [], userProfile: nu
 const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 const getColRef = (colName) => collection(db, "apps", APP_ID, colName);
 
+// --- CẤU HÌNH SUPER ADMIN ---
+const SUPER_ADMIN_EMAIL = "minln8785@gmail.com"; // Email của tài khoản admin cao nhất, không thể bị xóa.
+
 // --- INIT ---
 async function initApp() {
     onAuthStateChanged(auth, async (user) => {
@@ -94,6 +97,7 @@ function setupDashboard(profile) {
     else if (role === 'partner') {
         ['nav-report', 'nav-users', 'nav-debt'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
         document.getElementById('config-driver-section').classList.add('hidden');
+        document.getElementById('config-customer-section').classList.add('hidden'); // CTV không được thêm khách hàng
 
         // Ẩn/hiện các trường cho CTV
         document.getElementById('standard-trip-fields').classList.remove('hidden'); // Hiện các trường cơ bản (Ngày, Giờ, KM)
@@ -107,6 +111,10 @@ function setupDashboard(profile) {
         document.getElementById('paid-checkbox-div').classList.add('hidden');
         document.getElementById('driver-field').classList.add('hidden');
         
+    } else if (role === 'admin') {
+        // Hiện tùy chọn gán xe cho CTV nếu là admin
+        const addCarPartnerDiv = document.getElementById('add-car-partner-div');
+        if (addCarPartnerDiv) addCarPartnerDiv.classList.remove('hidden');
     }
 
     setupRealtimeListeners(role, profile.uid);
@@ -241,8 +249,10 @@ function setupAppEventListeners(role, uid) {
             e.preventDefault(); const input = e.target.querySelector('input');
             if(input.value.trim()) {
                 try {
-                    if(!uid) throw new Error("UID missing");
-                    await addDoc(getColRef(col), { name: input.value.trim(), createdAt: new Date().toISOString(), createdBy: uid });
+                    let creatorId = uid;
+                    // Nếu là form xe và admin đang chọn 1 CTV, thì gán xe cho CTV đó
+                    if (col === 'cars' && role === 'admin' && document.getElementById('add-car-partner-select').value) creatorId = document.getElementById('add-car-partner-select').value;
+                    await addDoc(getColRef(col), { name: input.value.trim(), createdAt: new Date().toISOString(), createdBy: creatorId });
                     input.value = '';
                 } catch (err) { console.error(err); alert("Lỗi: " + err.message); }
             }
@@ -314,7 +324,13 @@ function setupAppEventListeners(role, uid) {
             document.getElementById('update-fare-modal').classList.remove('hidden');
         }
         if (e.target.classList.contains('btn-delete-trip')) {
-            if(role !== 'admin') return alert("Không có quyền!"); if(confirm('Xóa chuyến này?')) await deleteDoc(doc(db, "apps", APP_ID, 'trips', e.target.dataset.id));
+            if(role !== 'admin') return alert("Không có quyền!"); 
+            if(confirm('Xóa chuyến này?')) {
+                try {
+                    await deleteDoc(doc(db, "apps", APP_ID, 'trips', e.target.dataset.id));
+                    alert("Đã xóa chuyến đi.");
+                } catch(err) { alert("Lỗi xóa chuyến đi: " + err.message); }
+            }
         }
         if (e.target.classList.contains('btn-delete')) {
             const itemId = e.target.dataset.id; const itemCol = e.target.dataset.col;
@@ -325,7 +341,17 @@ function setupAppEventListeners(role, uid) {
             if(confirm('Xóa mục này?')) await deleteDoc(doc(db, "apps", APP_ID, itemCol, itemId));
         }
         if (e.target.classList.contains('btn-export-word')) exportReportToNewTab(e.target.dataset.target, e.target.dataset.title);
-        if (e.target.classList.contains('btn-delete-user')) { if(role !== 'admin') return; if(confirm("Xóa nhân sự này?")) await deleteDoc(doc(db, "apps", APP_ID, "users", e.target.dataset.id)); }
+        if (e.target.classList.contains('btn-delete-user')) { 
+            if(role !== 'admin') return; 
+            const userIdToDelete = e.target.dataset.id;
+            const userToDelete = state.users.find(u => u.id === userIdToDelete);
+
+            if (userToDelete && userToDelete.email === SUPER_ADMIN_EMAIL) {
+                alert("Không thể xóa tài khoản Super Admin!");
+                return;
+            }
+            if(confirm("Xác nhận xóa nhân sự này?")) await deleteDoc(doc(db, "apps", APP_ID, "users", userIdToDelete)); 
+        }
         if (e.target.classList.contains('btn-edit-user')) {
             if(role !== 'admin') return;
             const u = state.users.find(u => u.id === e.target.dataset.id);
@@ -413,7 +439,20 @@ function setDefaultDate() {
     if (d1 && d2) { d1.value = today; d2.value = today; }
     if (t1 && t2) { t1.value = currentTime; t2.value = currentTime; }
 }
-function renderConfigList(elementId, data, colName) { const el = document.getElementById(elementId); if(!el) return; const myRole = state.userProfile.role; const myUid = state.userProfile.uid; el.innerHTML = data.map(item => { let showDel = false; if (myRole === 'admin') showDel = true; if (myRole === 'partner' && item.createdBy === myUid) showDel = true; return `<div class="flex justify-between p-2 bg-gray-50 border rounded items-center"><span>${item.name}</span>${showDel ? `<button class="text-red-500 font-bold px-2 btn-delete" data-col="${colName}" data-id="${item.id}">×</button>` : ''}</div>` }).join(''); }
+function renderConfigList(elementId, data, colName) { 
+    const el = document.getElementById(elementId); if(!el) return; 
+    const myRole = state.userProfile.role; 
+    const myUid = state.userProfile.uid; 
+    el.innerHTML = data.map(item => { 
+        let showDel = (myRole === 'admin') || (myRole === 'partner' && item.createdBy === myUid);
+        let ownerInfo = '';
+        if (myRole === 'admin' && colName === 'cars' && item.createdBy !== myUid) {
+            const owner = state.users.find(u => u.id === item.createdBy);
+            if (owner) ownerInfo = `<span class="text-xs text-purple-600 ml-2 font-bold">(${owner.name})</span>`;
+        }
+        return `<div class="flex justify-between p-2 bg-gray-50 border rounded items-center"><span>${item.name}${ownerInfo}</span>${showDel ? `<button class="text-red-500 font-bold px-2 btn-delete" data-col="${colName}" data-id="${item.id}">×</button>` : ''}</div>` 
+    }).join(''); 
+}
 function populateSelects() {
     const fill = (id, data, label) => { const el = document.getElementById(id); if(el) { const cur = el.value; el.innerHTML = `<option value="">-- ${label} --</option>` + data.map(i => `<option value="${i.id}">${i.name}</option>`).join(''); if(cur) el.value = cur; } };
     fill('car-select', state.cars, 'Tất cả xe'); fill('driver-select', state.drivers, 'Tất cả tài xế'); fill('customer-select', state.customers, 'Tất cả khách hàng');
@@ -422,6 +461,7 @@ function populateSelects() {
     const partners = state.users.filter(u => u.role === 'partner');
     const partnerOptions = partners.map(p => ({id: p.uid || p.id, name: p.name}));
     fill('list-filter-partner', partnerOptions, 'Tất cả CTV');
+    fill('add-car-partner-select', partnerOptions, 'Gán cho chính mình');
     fill('report-partner-select', partnerOptions, 'Chọn CTV');
     fill('report-customer-select', state.customers, 'Chọn khách hàng');
     
@@ -430,7 +470,15 @@ function populateSelects() {
     fill('list-filter-car', carsForFilter, 'Tất cả xe'); 
 }
 function populateDebtSelects() { const type = document.getElementById('debt-type-select').value; const personSelect = document.getElementById('debt-person-select'); personSelect.innerHTML = '<option value="all">-- Tất cả --</option>'; if (type === 'customer') { state.customers.forEach(c => personSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`); } else { const partners = state.users.filter(u => u.role === 'partner'); partners.forEach(p => personSelect.innerHTML += `<option value="${p.uid || p.id}">${p.name}</option>`); } }
-function renderUsersList() { const list = document.getElementById('users-list'); if (!list) return; list.innerHTML = state.users.map(user => { const isMe = user.id === auth.currentUser.uid; const disabled = isMe ? 'opacity-50 cursor-not-allowed' : ''; return `<tr><td class="p-3">${user.name}</td><td class="p-3">${user.email}</td><td class="p-3"><span class="px-2 py-1 text-xs font-bold rounded bg-gray-100 border">${translateRole(user.role)}</span></td><td class="p-3"><div class="flex gap-2"><button class="text-blue-600 hover:text-blue-800 font-bold text-sm btn-edit-user" data-id="${user.id}">Sửa</button>${!isMe ? `<button class="text-red-600 hover:text-red-800 font-bold text-sm btn-delete-user" data-id="${user.id}">Xóa</button>` : ''}</div></td></tr>`; }).join(''); }
+function renderUsersList() { 
+    const list = document.getElementById('users-list'); if (!list) return; 
+    list.innerHTML = state.users.map(user => { 
+        const isMe = user.id === auth.currentUser.uid;
+        const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
+        const canDelete = !isMe && !isSuperAdmin; // Chỉ hiện nút xóa khi không phải là chính mình và không phải Super Admin
+        return `<tr><td class="p-3">${user.name}</td><td class="p-3">${user.email}</td><td class="p-3"><span class="px-2 py-1 text-xs font-bold rounded bg-gray-100 border">${translateRole(user.role)}</span></td><td class="p-3"><div class="flex gap-2"><button class="text-blue-600 hover:text-blue-800 font-bold text-sm btn-edit-user" data-id="${user.id}">Sửa</button>${canDelete ? `<button class="text-red-600 hover:text-red-800 font-bold text-sm btn-delete-user" data-id="${user.id}">Xóa</button>` : ''}</div></td></tr>`; 
+    }).join(''); 
+}
 
 // CẢI TIẾN XUẤT FILE WORD (DÙNG BẢNG ĐỂ CĂN CHỈNH)
 function exportReportToNewTab(elementId, title) {

@@ -284,6 +284,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="bg-white p-4 rounded-xl shadow-sm border">
                             <h3 class="font-bold mb-3 text-blue-600">Quản Lý Xe</h3>
+                            <div id="add-car-partner-div" class="hidden mb-2">
+                                <label class="block text-xs font-medium text-gray-500">Gán xe cho CTV (nếu có)</label>
+                                <select id="add-car-partner-select" class="form-input text-sm"></select>
+                            </div>
                             <form id="add-car-form" class="flex gap-2 my-2"><input class="form-input text-sm" placeholder="Tên xe..." required><button class="bg-blue-600 text-white px-3 rounded">+</button></form>
                             <div id="car-list" class="max-h-60 overflow-y-auto space-y-1 mt-2"></div>
                         </div>
