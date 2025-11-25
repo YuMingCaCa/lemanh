@@ -102,6 +102,7 @@ function setupDashboard(profile) {
         document.getElementById('dropoff-location').parentElement.classList.add('hidden'); // Ẩn "Điểm trả"
         document.getElementById('fuel-cost').parentElement.classList.add('hidden'); // Ẩn "Tiền xăng"
         document.getElementById('trip-fare').parentElement.classList.add('hidden'); // Ẩn "Doanh thu"
+        document.getElementById('customer-field').classList.remove('hidden'); // Hiện lại trường Khách hàng
 
         document.getElementById('paid-checkbox-div').classList.add('hidden');
         document.getElementById('driver-field').classList.add('hidden');
@@ -286,6 +287,7 @@ function setupAppEventListeners(role, uid) {
                 trip.tripContent = document.getElementById('trip-content').value;
                 trip.referrerId = uid; trip.referrerName = state.userProfile.name;
                 trip.customerId = document.getElementById('customer-select').value; trip.customerName = getTxt('customer-select');
+                trip.tripUser = document.getElementById('trip-user').value;
                 trip.startKm = Number(document.getElementById('start-km').value);
                 trip.endKm = Number(document.getElementById('end-km').value);
                 trip.ticketCost = Number(document.getElementById('ticket-cost').value);
@@ -293,6 +295,7 @@ function setupAppEventListeners(role, uid) {
                 trip.driverId = document.getElementById('driver-select').value; trip.driverName = getTxt('driver-select');
                 trip.customerId = document.getElementById('customer-select').value; trip.customerName = getTxt('customer-select');
                 trip.pickupLocation = document.getElementById('pickup-location').value; trip.dropoffLocation = document.getElementById('dropoff-location').value;
+                trip.tripUser = document.getElementById('trip-user').value;
                 trip.startKm = Number(document.getElementById('start-km').value); trip.endKm = Number(document.getElementById('end-km').value);
                 trip.fuelCost = Number(document.getElementById('fuel-cost').value);
                 trip.ticketCost = Number(document.getElementById('ticket-cost').value);
@@ -500,7 +503,24 @@ function generateDetailedCarReport(carId) {
     if(trips.length === 0) { div.innerHTML = "<p class='text-gray-500 mt-2'>Không có chuyến.</p>"; return; }
     const totalFare = trips.reduce((s, t) => s + (t.tripFare || 0), 0); const totalCost = trips.reduce((s, t) => s + (t.fuelCost || 0) + (t.ticketCost || 0), 0);
     const reportId = `car-report-${carId}`;
-    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">Xe: ${state.cars.find(c=>c.id===carId)?.name}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Báo Cáo Xe">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Thu: <b>${currencyFormatter.format(totalFare)}</b> - Chi: <b>${currencyFormatter.format(totalCost)}</b></p><table class="w-full text-sm bg-white border"><thead><tr><th class="p-2 border">Ngày</th><th class="p-2 border">Lộ Trình</th><th class="p-2 border">Thu</th><th class="p-2 border">Chi</th></tr></thead><tbody>${trips.map(t => `<tr><td class="p-2 border">${new Date(t.startDate).getDate()}/${new Date(t.startDate).getMonth()+1}</td><td class="p-2 border">${t.tripContent || t.pickupLocation}</td><td class="p-2 border">${currencyFormatter.format(t.tripFare)}</td><td class="p-2 border">${currencyFormatter.format((t.fuelCost||0)+(t.ticketCost||0))}</td></tr>`).join('')}</tbody></table></div>`;
+    const tableHeader = `<thead><tr>
+        <th class="p-2 border">STT</th><th class="p-2 border">Ngày</th><th class="p-2 border">Giờ Đi</th><th class="p-2 border">Giờ Về</th>
+        <th class="p-2 border">Lộ Trình</th><th class="p-2 border">Người sử dụng</th><th class="p-2 border">KM</th><th class="p-2 border">Vé</th>
+        <th class="p-2 border">Thu</th><th class="p-2 border">Chi</th>
+    </tr></thead>`;
+    const tableBody = `<tbody>${trips.map((t, index) => `<tr>
+        <td class="p-2 border">${index + 1}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleDateString('vi-VN')}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${t.tripContent || t.pickupLocation || ''}</td>
+        <td class="p-2 border">${t.tripUser || ''}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format(t.tripFare || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format((t.fuelCost||0)+(t.ticketCost||0))}</td>
+    </tr>`).join('')}</tbody>`;
+    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">Xe: ${state.cars.find(c=>c.id===carId)?.name}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Báo Cáo Xe">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Thu: <b>${currencyFormatter.format(totalFare)}</b> - Chi: <b>${currencyFormatter.format(totalCost)}</b></p><table class="w-full text-sm bg-white border">${tableHeader}${tableBody}</table></div>`;
 }
 function generateDetailedDriverReport(driverId) {
     const div = document.getElementById('driver-detail-report'); if(!driverId) { div.innerHTML = ""; return; }
@@ -510,7 +530,24 @@ function generateDetailedDriverReport(driverId) {
     if(trips.length === 0) { div.innerHTML = "<p class='text-gray-500 mt-2'>Không có chuyến.</p>"; return; }
     let totalSalary = 0; trips.forEach(t => totalSalary += (t.tripFare || 0) * 0.20);
     const reportId = `driver-report-${driverId}`;
-    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">Tài xế: ${state.drivers.find(d=>d.id===driverId)?.name}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Lương Tài Xế">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Tổng chuyến: <b>${trips.length}</b> - Lương (20%): <b>${currencyFormatter.format(totalSalary)}</b></p><table class="w-full text-sm bg-white border"><thead><tr><th class="p-2 border">Ngày</th><th class="p-2 border">Lộ Trình</th><th class="p-2 border">Doanh Thu</th><th class="p-2 border">Lương</th></tr></thead><tbody>${trips.map(t => `<tr><td class="p-2 border">${new Date(t.startDate).getDate()}/${new Date(t.startDate).getMonth()+1}</td><td class="p-2 border">${t.pickupLocation}</td><td class="p-2 border">${currencyFormatter.format(t.tripFare)}</td><td class="p-2 border text-blue-600 font-bold">${currencyFormatter.format(t.tripFare*0.20)}</td></tr>`).join('')}</tbody></table></div>`;
+    const tableHeader = `<thead><tr>
+        <th class="p-2 border">STT</th><th class="p-2 border">Ngày</th><th class="p-2 border">Giờ Đi</th><th class="p-2 border">Giờ Về</th>
+        <th class="p-2 border">Lộ Trình</th><th class="p-2 border">Người sử dụng</th><th class="p-2 border">KM</th><th class="p-2 border">Vé</th>
+        <th class="p-2 border">Doanh Thu</th><th class="p-2 border">Lương</th>
+    </tr></thead>`;
+    const tableBody = `<tbody>${trips.map((t, index) => `<tr>
+        <td class="p-2 border">${index + 1}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleDateString('vi-VN')}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${t.pickupLocation || ''}</td>
+        <td class="p-2 border">${t.tripUser || ''}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format(t.tripFare || 0)}</td>
+        <td class="p-2 border text-blue-600 font-bold">${currencyFormatter.format((t.tripFare || 0) * 0.20)}</td>
+    </tr>`).join('')}</tbody>`;
+    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">Tài xế: ${state.drivers.find(d=>d.id===driverId)?.name}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Lương Tài Xế">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Tổng chuyến: <b>${trips.length}</b> - Lương (20%): <b>${currencyFormatter.format(totalSalary)}</b></p><table class="w-full text-sm bg-white border">${tableHeader}${tableBody}</table></div>`;
 }
 function generateDetailedPartnerReport(partnerId) {
     const div = document.getElementById('partner-detail-report'); if(!partnerId) { div.innerHTML = ""; return; }
@@ -521,7 +558,23 @@ function generateDetailedPartnerReport(partnerId) {
     const totalFare = trips.reduce((s, t) => s + (t.tripFare || 0), 0);
     const reportId = `partner-report-${partnerId}`;
     const partnerName = state.users.find(u => (u.uid === partnerId || u.id === partnerId))?.name || 'CTV';
-    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">CTV: ${partnerName}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Báo Cáo CTV">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Tổng doanh thu: <b>${currencyFormatter.format(totalFare)}</b></p><table class="w-full text-sm bg-white border"><thead><tr><th class="p-2 border">Ngày</th><th class="p-2 border">Nội dung</th><th class="p-2 border">Doanh Thu</th></tr></thead><tbody>${trips.map(t => `<tr><td class="p-2 border">${new Date(t.startDate).getDate()}/${new Date(t.startDate).getMonth()+1}</td><td class="p-2 border">${t.tripContent || (t.pickupLocation + ' ➔ ' + t.dropoffLocation)}</td><td class="p-2 border text-green-600 font-bold">${currencyFormatter.format(t.tripFare)}</td></tr>`).join('')}</tbody></table></div>`;
+    const tableHeader = `<thead><tr>
+        <th class="p-2 border">STT</th><th class="p-2 border">Ngày</th><th class="p-2 border">Giờ Đi</th><th class="p-2 border">Giờ Về</th>
+        <th class="p-2 border">Nội dung</th><th class="p-2 border">Người sử dụng</th><th class="p-2 border">KM</th><th class="p-2 border">Vé</th>
+        <th class="p-2 border">Doanh Thu</th>
+    </tr></thead>`;
+    const tableBody = `<tbody>${trips.map((t, index) => `<tr>
+        <td class="p-2 border">${index + 1}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleDateString('vi-VN')}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${t.tripContent || (t.pickupLocation + ' ➔ ' + t.dropoffLocation) || ''}</td>
+        <td class="p-2 border">${t.tripUser || ''}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
+        <td class="p-2 border text-green-600 font-bold">${currencyFormatter.format(t.tripFare || 0)}</td>
+    </tr>`).join('')}</tbody>`;
+    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">CTV: ${partnerName}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Báo Cáo CTV">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Tổng doanh thu: <b>${currencyFormatter.format(totalFare)}</b></p><table class="w-full text-sm bg-white border">${tableHeader}${tableBody}</table></div>`;
 }
 function generateDetailedCustomerReport(customerId) {
     const div = document.getElementById('customer-detail-report'); if(!customerId) { div.innerHTML = ""; return; }
@@ -531,7 +584,23 @@ function generateDetailedCustomerReport(customerId) {
     if(trips.length === 0) { div.innerHTML = "<p class='text-gray-500 mt-2'>Không có chuyến.</p>"; return; }
     const totalFare = trips.reduce((s, t) => s + (t.tripFare || 0), 0);
     const reportId = `customer-report-${customerId}`;
-    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">Khách: ${state.customers.find(c=>c.id===customerId)?.name}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Báo Cáo Khách">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Tổng chi tiêu: <b>${currencyFormatter.format(totalFare)}</b></p><table class="w-full text-sm bg-white border"><thead><tr><th class="p-2 border">Ngày</th><th class="p-2 border">Lộ Trình</th><th class="p-2 border">Thành Tiền</th></tr></thead><tbody>${trips.map(t => `<tr><td class="p-2 border">${new Date(t.startDate).getDate()}/${new Date(t.startDate).getMonth()+1}</td><td class="p-2 border">${t.tripContent || (t.pickupLocation + ' ➔ ' + t.dropoffLocation)}</td><td class="p-2 border text-blue-600">${currencyFormatter.format(t.tripFare)}</td></tr>`).join('')}</tbody></table></div>`;
+    const tableHeader = `<thead><tr>
+        <th class="p-2 border">STT</th><th class="p-2 border">Ngày</th><th class="p-2 border">Giờ Đi</th><th class="p-2 border">Giờ Về</th>
+        <th class="p-2 border">Lộ Trình</th><th class="p-2 border">Người sử dụng</th><th class="p-2 border">KM</th><th class="p-2 border">Vé</th>
+        <th class="p-2 border">Thành Tiền</th>
+    </tr></thead>`;
+    const tableBody = `<tbody>${trips.map((t, index) => `<tr>
+        <td class="p-2 border">${index + 1}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleDateString('vi-VN')}</td>
+        <td class="p-2 border">${new Date(t.startDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
+        <td class="p-2 border">${t.tripContent || (t.pickupLocation + ' ➔ ' + t.dropoffLocation) || ''}</td>
+        <td class="p-2 border">${t.tripUser || ''}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
+        <td class="p-2 border text-blue-600">${currencyFormatter.format(t.tripFare || 0)}</td>
+    </tr>`).join('')}</tbody>`;
+    div.innerHTML = `<div id="${reportId}" class="bg-gray-50 p-4 rounded-lg border mt-3"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-700">Khách: ${state.customers.find(c=>c.id===customerId)?.name}</h4><button class="export-button btn-export-word" data-target="${reportId}" data-title="Báo Cáo Khách">Xuất Báo Cáo</button></div><p class="text-sm mb-2">Tổng chi tiêu: <b>${currencyFormatter.format(totalFare)}</b></p><table class="w-full text-sm bg-white border">${tableHeader}${tableBody}</table></div>`;
 }
 function renderDebts() {
     const filterId = document.getElementById('debt-customer-select')?.value;
