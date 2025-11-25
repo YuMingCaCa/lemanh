@@ -515,7 +515,7 @@ function generateDetailedCarReport(carId) {
         <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
         <td class="p-2 border">${t.tripContent || t.pickupLocation || ''}</td>
         <td class="p-2 border">${t.tripUser || ''}</td>
-        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)} km</td>
         <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
         <td class="p-2 border">${currencyFormatter.format(t.tripFare || 0)}</td>
         <td class="p-2 border">${currencyFormatter.format((t.fuelCost||0)+(t.ticketCost||0))}</td>
@@ -542,7 +542,7 @@ function generateDetailedDriverReport(driverId) {
         <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
         <td class="p-2 border">${t.pickupLocation || ''}</td>
         <td class="p-2 border">${t.tripUser || ''}</td>
-        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)} km</td>
         <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
         <td class="p-2 border">${currencyFormatter.format(t.tripFare || 0)}</td>
         <td class="p-2 border text-blue-600 font-bold">${currencyFormatter.format((t.tripFare || 0) * 0.20)}</td>
@@ -570,7 +570,7 @@ function generateDetailedPartnerReport(partnerId) {
         <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
         <td class="p-2 border">${t.tripContent || (t.pickupLocation + ' ➔ ' + t.dropoffLocation) || ''}</td>
         <td class="p-2 border">${t.tripUser || ''}</td>
-        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)} km</td>
         <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
         <td class="p-2 border text-green-600 font-bold">${currencyFormatter.format(t.tripFare || 0)}</td>
     </tr>`).join('')}</tbody>`;
@@ -596,7 +596,7 @@ function generateDetailedCustomerReport(customerId) {
         <td class="p-2 border">${new Date(t.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</td>
         <td class="p-2 border">${t.tripContent || (t.pickupLocation + ' ➔ ' + t.dropoffLocation) || ''}</td>
         <td class="p-2 border">${t.tripUser || ''}</td>
-        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)}</td>
+        <td class="p-2 border">${(t.endKm || 0) - (t.startKm || 0)} km</td>
         <td class="p-2 border">${currencyFormatter.format(t.ticketCost || 0)}</td>
         <td class="p-2 border text-blue-600">${currencyFormatter.format(t.tripFare || 0)}</td>
     </tr>`).join('')}</tbody>`;
